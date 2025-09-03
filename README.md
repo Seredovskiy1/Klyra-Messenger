@@ -31,7 +31,7 @@ cd klyra-desktop
 cp src/config.example.json src/config.json
 # Edit src/config.json if needed
 npm install
-cargo tauri dev
+npm run tauri dev
 ```
 
 ## Configuration
