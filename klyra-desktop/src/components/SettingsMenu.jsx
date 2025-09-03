@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { invoke } from '@tauri-apps/api/tauri';
 import "./SettingsMenu.css";
 
 function SettingsMenu({ isOpen, onClose, userInfo }) {
@@ -91,6 +92,17 @@ function SettingsMenu({ isOpen, onClose, userInfo }) {
     }
   };
 
+  // Function to open external links
+  const openExternalLink = async (url) => {
+    try {
+      await invoke('shell_open', { path: url });
+    } catch (error) {
+      console.error('Failed to open external link:', error);
+      // Fallback to window.open if Tauri API fails
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const getAvatarLetter = () => {
     return firstName.charAt(0).toUpperCase();
   };
@@ -155,6 +167,17 @@ function SettingsMenu({ isOpen, onClose, userInfo }) {
           <circle cx="12" cy="12" r="3"/>
           <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
           <path d="M20.66 3.34l-4.24 4.24m-8.48 8.48l-4.24 4.24m0-16.96l4.24 4.24m8.48 8.48l4.24 4.24"/>
+        </svg>
+      )
+    },
+    { 
+      id: 'about', 
+      title: 'About', 
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       )
     }
@@ -411,6 +434,77 @@ function SettingsMenu({ isOpen, onClose, userInfo }) {
                   <span className="settings-item-desc">Remove personal data but keep app settings</span>
                 </div>
                 <button className="settings-btn" onClick={clearAllData}>Clear Personal Data</button>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'about':
+        return (
+          <div className="settings-content">
+            <div className="settings-section">
+              <h3>About Klyra</h3>
+              <div className="about-section">
+                <div className="about-logo">
+                  <div className="about-logo-circle">
+                    <span>K</span>
+                  </div>
+                </div>
+                <div className="about-info">
+                  <h4>Klyra Messenger</h4>
+                  <p className="about-version">Version 1.0.0</p>
+                  <p className="about-description">
+                    A modern, cross-platform messaging application built with Tauri and React. 
+                    Features real-time messaging, file sharing, and secure communication.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="about-details">
+                <div className="about-item about-item-multiline">
+                  <span className="about-label">Copyright</span>
+                  <div className="about-value-multiline">
+                    <div>© 2025 Klyra, Inc.</div>
+                    <div className="author-info">
+                      Original Author and Creator: 
+                      <button 
+                        onClick={() => openExternalLink('https://github.com/Seredovskiy1')}
+                        className="github-link"
+                        type="button"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{marginRight: '4px', verticalAlign: 'middle'}}>
+                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        @Seredovskiy1
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="about-item">
+                  <span className="about-label">License</span>
+                  <span className="about-value">Apache 2.0</span>
+                </div>
+                <div className="about-item">
+                  <span className="about-label">Technology</span>
+                  <span className="about-value">Tauri + React + Node.js</span>
+                </div>
+                <div className="about-item">
+                  <span className="about-label">Platform</span>
+                  <span className="about-value">Cross-platform Desktop</span>
+                </div>
+              </div>
+              
+              <div className="about-features">
+                <h5>Features</h5>
+                <ul>
+                  <li>Real-time messaging</li>
+                  <li>File sharing</li>
+                  <li>Message editing & deletion</li>
+                  <li>User management</li>
+                  <li>Dark/Light themes</li>
+                  <li>Sound notifications</li>
+                  <li>Cross-platform support</li>
+                </ul>
               </div>
             </div>
           </div>

@@ -784,3 +784,314 @@ body.dark-theme .settings-info-text {
   background: #2d3748;
   border-color: #4a5568;
 }
+
+/* About Section Styles */
+.about-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.about-logo {
+  flex-shrink: 0;
+}
+
+.about-logo-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.about-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #212529;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #212529 0%, #495057 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.about-version {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.about-description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #6c757d;
+  font-weight: 400;
+  text-align: justify;
+}
+
+.about-details {
+  margin-bottom: 30px;
+}
+
+.about-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.about-item:last-child {
+  border-bottom: none;
+}
+
+.about-label {
+  font-weight: 500;
+  color: #212529;
+}
+
+.about-value {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.about-features {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.about-features h5 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.about-features ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-features li {
+  padding: 6px 0;
+  color: #6c757d;
+  font-size: 14px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.about-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Dark theme adjustments */
+body.dark-theme .about-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .about-features {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .about-info h4 {
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .about-version {
+  color: #a0aec0;
+}
+
+body.dark-theme .about-description {
+  color: #a0aec0;
+}
+
+body.dark-theme .about-label {
+  color: #ffffff;
+}
+
+body.dark-theme .about-value {
+  color: #a0aec0;
+}
+
+body.dark-theme .about-features h5 {
+  color: #ffffff;
+}
+
+body.dark-theme .about-features li {
+  color: #a0aec0;
+}
+
+/* GitHub link styling */
+.about-value a,
+.github-link {
+  color: #0366d6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(3, 102, 214, 0.1) 0%, rgba(3, 102, 214, 0.15) 100%);
+  box-shadow: 0 2px 4px rgba(3, 102, 214, 0.1);
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.about-value a::before,
+.github-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.about-value a:hover::before,
+.github-link:hover::before {
+  left: 100%;
+}
+
+.about-value a:hover,
+.github-link:hover {
+  color: #0251cc;
+  border-bottom-color: #0251cc;
+  text-decoration: none;
+  background: linear-gradient(135deg, rgba(3, 102, 214, 0.15) 0%, rgba(3, 102, 214, 0.25) 100%);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(3, 102, 214, 0.2);
+}
+
+.about-value a:active,
+.github-link:active {
+  color: #0247b8;
+  transform: translateY(-1px) scale(1.01);
+}
+
+.github-link svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.github-link:hover svg {
+  transform: scale(1.15) rotate(5deg);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Dark theme for GitHub link */
+body.dark-theme .about-value a {
+  color: #58a6ff;
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(88, 166, 255, 0.15) 100%);
+  box-shadow: 0 2px 4px rgba(88, 166, 255, 0.1);
+}
+
+body.dark-theme .about-value a:hover {
+  color: #79c0ff;
+  border-bottom-color: #79c0ff;
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.15) 0%, rgba(88, 166, 255, 0.25) 100%);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+}
+
+body.dark-theme .about-value a:active {
+  color: #1f6feb;
+}
+
+/* Multiline about item styling */
+.about-item-multiline {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.about-value-multiline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.about-value-multiline > div:first-child {
+  font-weight: 600;
+  font-size: 16px;
+  color: #212529;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.author-info {
+  font-size: 14px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.05) 0%, rgba(108, 117, 125, 0.1) 100%);
+  border-radius: 8px;
+  border-left: 3px solid #6c757d;
+  transition: all 0.3s ease;
+}
+
+.author-info:hover {
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(108, 117, 125, 0.15) 100%);
+  transform: translateX(2px);
+}
+
+/* Dark theme for multiline */
+body.dark-theme .about-value-multiline > div:first-child {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .author-info {
+  color: #a0aec0;
+  background: linear-gradient(135deg, rgba(160, 174, 192, 0.1) 0%, rgba(160, 174, 192, 0.15) 100%);
+  border-left-color: #a0aec0;
+}
+
+body.dark-theme .author-info:hover {
+  background: linear-gradient(135deg, rgba(160, 174, 192, 0.15) 0%, rgba(160, 174, 192, 0.2) 100%);
+}

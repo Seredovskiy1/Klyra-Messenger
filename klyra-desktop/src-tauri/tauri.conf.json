@@ -21,6 +21,10 @@
         "minimize": true,
         "unminimize": true,
         "startDragging": true
+      },
+      "shell": {
+        "all": false,
+        "open": true
       }
     },
     "bundle": {

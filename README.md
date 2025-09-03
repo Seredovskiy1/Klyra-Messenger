@@ -2,6 +2,10 @@
 
 A modern, cross-platform chat application with separate client and server components.
 
+**Copyright © 2025 @Seredovskiy1 - Original Author and Creator**
+
+*This project is the original work of @Seredovskiy1. All rights reserved.*
+
 ## Project Structure
 
 ```
