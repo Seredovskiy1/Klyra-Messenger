@@ -1,0 +1,45 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "klyra-desktop",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "window": {
+        "all": true,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "unmaximize": true,
+        "minimize": true,
+        "unminimize": true,
+        "startDragging": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.klyra.klyra-desktop"
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Klyra Desktop",
+        "width": 1200,
+        "height": 900,
+        "decorations": false,
+        "resizable": true,
+        "center": true
+      }
+    ]
+  }
+}

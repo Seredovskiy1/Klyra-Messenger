@@ -1,0 +1,180 @@
+/* Глобальне контекстне меню */
+.global-context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  z-index: 10000;
+  min-width: 200px;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: left;
+  font-weight: 500;
+  position: relative;
+}
+
+/* Стилі для пунктів з клавіатурними скороченнями */
+.context-menu-item:has(.shortcut) {
+  padding-right: 80px;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.context-menu-item svg {
+  flex-shrink: 0;
+  color: #6c757d;
+}
+
+/* Стилі для клавіатурних скорочень */
+.shortcut {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-left: auto;
+  position: absolute;
+  right: 16px;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background-color: #e9ecef;
+  margin: 8px 0;
+}
+
+/* Темна тема для глобального контекстного меню */
+body.dark-theme .global-context-menu {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .context-menu-item {
+  color: #e2e8f0;
+}
+
+body.dark-theme .context-menu-item:hover {
+  background-color: #4a5568;
+}
+
+body.dark-theme .context-menu-item svg {
+  color: #a0aec0;
+}
+
+/* Темна тема для клавіатурних скорочень */
+body.dark-theme .shortcut {
+  color: #a0aec0;
+  opacity: 0.8;
+}
+
+body.dark-theme .context-menu-separator {
+  background-color: #4a5568;
+}
+
+/* Анімація появи */
+.global-context-menu {
+  animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+/* Анімація для меню, що з'являється знизу */
+.menu-down {
+  animation: contextMenuSlideUp 0.15s ease-out;
+}
+
+/* Анімація для меню, що з'являється зверху */
+.menu-up {
+  animation: contextMenuSlideDown 0.15s ease-out;
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes contextMenuSlideUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes contextMenuSlideDown {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Індикатор напрямку меню */
+.menu-direction-indicator {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+
+.indicator-down {
+  top: -6px;
+  left: 20px;
+  border-bottom: 6px solid white;
+}
+
+.indicator-up {
+  bottom: -6px;
+  left: 20px;
+  border-top: 6px solid white;
+}
+
+/* Темна тема для індикатора */
+body.dark-theme .indicator-down {
+  border-bottom-color: #2d3748;
+}
+
+body.dark-theme .indicator-up {
+  border-top-color: #2d3748;
+}
+
+/* Адаптивність */
+@media (max-width: 600px) {
+  .global-context-menu {
+    min-width: 180px;
+  }
+  
+  .context-menu-item {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}

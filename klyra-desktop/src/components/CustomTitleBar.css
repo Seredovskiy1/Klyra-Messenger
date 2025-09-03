@@ -1,0 +1,191 @@
+.custom-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1000;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.title-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.app-icon:hover {
+  transform: scale(1.1);
+}
+
+.icon-circle {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.icon-circle-1 {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  z-index: 2;
+}
+
+.icon-circle-2 {
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  box-shadow: 0 0 8px rgba(255, 107, 53, 0.3);
+  top: 2px;
+  right: 2px;
+  z-index: 1;
+}
+
+.app-title {
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.klyra-logo {
+  height: 24px;
+  width: auto;
+  max-width: 120px;
+}
+
+.title-bar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.drag-region {
+  width: 100%;
+  height: 100%;
+}
+
+.title-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.title-bar-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  outline: none;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+}
+
+.title-bar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  color: #adb5bd;
+}
+
+.title-bar-btn:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.minimize-btn:not(:disabled):hover {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.maximize-btn:not(:disabled):hover {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+}
+
+.close-btn:not(:disabled):hover {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+}
+
+.title-bar-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .custom-title-bar {
+    height: 36px;
+    padding: 0 12px;
+  }
+  
+  .app-title {
+    font-size: 12px;
+  }
+  
+  .title-bar-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Темна тема */
+body.dark-theme .custom-title-bar {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%) !important;
+  border-bottom: 1px solid #34495e !important;
+  color: #ecf0f1 !important;
+}
+
+body.dark-theme .app-title {
+  color: #ecf0f1 !important;
+}
+
+body.dark-theme .title-bar-btn {
+  color: #bdc3c7 !important;
+}
+
+body.dark-theme .title-bar-btn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark-theme .minimize-btn:not(:disabled):hover {
+  background: rgba(255, 193, 7, 0.2) !important;
+  color: #ffc107 !important;
+}
+
+body.dark-theme .maximize-btn:not(:disabled):hover {
+  background: rgba(40, 167, 69, 0.2) !important;
+  color: #28a745 !important;
+}
+
+body.dark-theme .close-btn:not(:disabled):hover {
+  background: rgba(220, 53, 69, 0.2) !important;
+  color: #dc3545 !important;
+}
+
+/* Видаляємо стилі для контекстного меню, оскільки тепер використовуємо глобальне */
+
