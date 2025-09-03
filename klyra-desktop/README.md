@@ -1,30 +1,18 @@
-# Klyra Desktop - Anonymous Secure Chat
+# Klyra Desktop - Modern Chat Messenger
 
-A modern, cross-platform anonymous desktop chat application built with Tauri, React, and Rust. Designed for maximum privacy and security.
+A modern, cross-platform desktop chat application built with Tauri, React, and Node.js. Simple and clean messaging experience.
 
 ## Overview
 
-Klyra Desktop is an anonymous chat application that prioritizes user privacy and security. Built with Rust backend and React frontend, wrapped in a native desktop experience using Tauri. The application provides a secure, anonymous chat experience with no data collection or tracking.
-
-## 🔒 Privacy & Security Features
-
-- **End-to-End Encryption**: All messages are encrypted with XOR cipher
-- **No Data Storage**: Messages are not stored on server - only in memory
-- **Auto-Delete**: Messages automatically disappear after 1 hour
-- **Anonymous Files**: File metadata (name, size, type) is removed for anonymity
-- **No Logging**: Zero server logs or activity tracking
-- **No IP Tracking**: IP addresses are not stored or logged
-- **Random Delays**: Traffic analysis prevention with random message delays
-- **Nickname Changes**: Change your nickname anytime for additional anonymity
-- **Data Clearing**: Clear all personal data while keeping app settings
+Klyra Desktop is a chat application that provides a clean and modern messaging experience. Built with Rust backend and React frontend, wrapped in a native desktop experience using Tauri. The application connects to a separate Node.js server for real-time messaging.
 
 ## 💬 Chat Features
 
-- **Real-time Chat**: Instant messaging with encrypted communication
-- **File Sharing**: Anonymous file sharing without metadata
-- **Message Editing**: Edit your messages with encryption
+- **Real-time Chat**: Instant messaging with WebSocket communication
+- **File Sharing**: Share files with other users
+- **Message Editing**: Edit your messages after sending
 - **Message Deletion**: Delete your messages anytime
-- **User Management**: Dynamic admin assignment (server creator becomes admin)
+- **User Management**: See online users and their status
 - **Auto-Reconnection**: Automatic reconnection with exponential backoff
 - **Sound Notifications**: Custom MP3 notifications (20% volume)
 - **Message Search**: Search through current session messages
@@ -51,9 +39,9 @@ Klyra Desktop is an anonymous chat application that prioritizes user privacy and
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Rust with Tauri (WebSocket server)
+- **Backend**: Rust with Tauri (Desktop wrapper)
 - **Frontend**: React 19 with Vite
-- **Encryption**: XOR cipher for message encryption
+- **Server**: Node.js with Express and Socket.io
 - **UI Framework**: Custom CSS with modern design principles
 - **Build Tool**: Tauri CLI
 - **Package Manager**: npm/Cargo
@@ -63,135 +51,100 @@ Klyra Desktop is an anonymous chat application that prioritizes user privacy and
 
 - **Rust**: Latest stable version (1.70+)
 - **Tauri CLI**: Install via `cargo install tauri-cli`
-- **Node.js**: Version 18+ (for frontend development)
-- **npm**: For managing frontend dependencies
+- **Node.js**: Version 18+ (for server)
+- **npm**: For managing dependencies
 
 ## 🚀 Quick Start
 
-### Option 1: Create Your Own Server
-1. **Start the application**
-2. **Click "Create Server"**
-3. **Enter server name and port**
-4. **Share connection details with others**
+### 1. Start the Server
+First, start the Klyra server:
+```cmd
+cd klyra-server
+npm install
+npm start
+```
 
-### Option 2: Connect to Existing Server
-1. **Start the application**
-2. **Click "Connect to Server"**
-3. **Enter server IP and port**
-4. **Start chatting anonymously**
+### 2. Start the Client
+Then, start the desktop application:
+```cmd
+cd klyra-desktop
+npm install
+cargo tauri dev
+```
 
 ## 📦 Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/klyra-desktop.git
-   cd klyra-desktop
+   ```cmd
+   git clone https://github.com/your-username/klyra-messenger.git
+   cd klyra-messenger
    ```
 
-2. **Install dependencies**
-   ```bash
+2. **Install server dependencies**
+   ```cmd
+   cd klyra-server
    npm install
    ```
 
-3. **Run in development mode**
-   ```bash
+3. **Install client dependencies**
+   ```cmd
+   cd ../klyra-desktop
+   npm install
+   ```
+
+4. **Start the server**
+   ```cmd
+   cd ../klyra-server
+   npm start
+   ```
+
+5. **Run the client in development mode**
+   ```cmd
+   cd ../klyra-desktop
    cargo tauri dev
    ```
 
 ## 🔧 Development
 
 ### Development Mode
-```bash
+```cmd
 cargo tauri dev
 ```
 This command starts the development server and opens the application in development mode with hot reload.
 
 ### Building for Production
-```bash
+```cmd
 cargo tauri build
 ```
 This creates optimized production builds for your target platform.
 
-### Frontend Development
-```bash
-npm run dev
-```
-Run only the frontend development server without Tauri.
-
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
-klyra-desktop/
-├── src/                    # React frontend source code
-│   ├── components/         # React components
-│   │   ├── ChatClient.jsx  # Main chat interface with encryption
-│   │   ├── AuthWindow.jsx  # Server creation/connection
-│   │   ├── SettingsMenu.jsx # Settings and nickname management
-│   │   └── CustomTitleBar.jsx # Custom window controls
-│   ├── assets/            # Static assets and images
-│   ├── App.jsx            # Main application component
-│   └── main.jsx           # Application entry point
-├── src-tauri/             # Rust backend and Tauri configuration
-│   ├── src/               # Rust source code
-│   │   └── main.rs        # WebSocket server with anonymity features
-│   ├── tauri.conf.json    # Tauri application configuration
-│   ├── Cargo.toml         # Rust dependencies
-│   └── icons/             # Application icons
-├── public/                 # Public static files
-├── index.html              # HTML entry point
-└── package.json            # Node.js dependencies
+Klyra-Messenger/
+├── klyra-desktop/          # Desktop client (Tauri + React)
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   └── assets/         # Static assets
+│   └── src-tauri/          # Rust backend
+└── klyra-server/           # Node.js server
+    ├── server.js           # Main server file
+    └── package.json        # Server dependencies
 ```
-
-## ⚙️ Configuration
-
-### Tauri Configuration
-The main Tauri configuration is located in `src-tauri/tauri.conf.json`. Key settings include:
-- Window properties (1200x900, decorations, resizable)
-- Application metadata (name, version, identifier)
-- Security policies and permissions
-
-### Rust Configuration
-Rust dependencies and build settings are managed in `src-tauri/Cargo.toml`.
-
-### Privacy Settings
-- **Theme**: Automatically saved in localStorage
-- **Personal Data**: Automatically cleared (except app settings)
-- **Messages**: Auto-deleted after 1 hour
-- **Files**: Anonymous names (file_timestamp.bin)
 
 ## 🏗️ Building and Distribution
 
 ### Local Build
-```bash
+```cmd
 cargo tauri build
 ```
 
 ### Cross-platform Build
-```bash
+```cmd
 cargo tauri build --target x86_64-pc-windows-msvc  # Windows
 cargo tauri build --target x86_64-apple-darwin      # macOS
 cargo tauri build --target x86_64-unknown-linux-gnu # Linux
 ```
-
-## 🔐 Security & Privacy
-
-### What We Protect
-- **Message Content**: End-to-end encrypted
-- **User Identity**: No persistent user IDs
-- **File Metadata**: Removed for anonymity
-- **Network Traffic**: Random delays prevent analysis
-- **Server Logs**: Completely disabled
-- **IP Addresses**: Not stored or tracked
-
-### What We Store
-- **Theme Settings**: Only UI preferences
-- **Session Data**: Only in memory (auto-deleted)
-
-### What We Don't Store
-- **Message History**: Never saved
-- **User Information**: No persistent data
-- **File Information**: No metadata
-- **Connection Logs**: No tracking
 
 ## 🤝 Contributing
 
@@ -200,13 +153,6 @@ cargo tauri build --target x86_64-unknown-linux-gnu # Linux
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-### Privacy-First Development
-When contributing, please ensure:
-- No data collection or tracking
-- Maintain anonymity features
-- Preserve encryption functionality
-- Keep zero-logging policy
 
 ## 📄 License
 
@@ -222,10 +168,6 @@ If you encounter any issues or have questions:
 ## 🙏 Acknowledgments
 
 - Built with [Tauri](https://tauri.app/)
-- Privacy-focused design principles
-- Anonymous communication protocols
+- Modern design principles
+- Real-time communication protocols
 - Icons and assets created specifically for Klyra Desktop
-
----
-
-**⚠️ Important**: This application is designed for anonymous communication. Use responsibly and in accordance with local laws and regulations.

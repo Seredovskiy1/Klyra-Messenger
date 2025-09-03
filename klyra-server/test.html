@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Klyra Server Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>Klyra Server Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const socket = io();
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+
+        socket.on('connect', () => {
+            status.textContent = 'Connected to server!';
+            status.style.color = 'green';
+            
+            // Join the general room
+            socket.emit('user_join', {
+                user: {
+                    id: 'test-user',
+                    name: 'Test User',
+                    nickname: 'test',
+                    avatar: 'T',
+                    room: 'general'
+                }
+            });
+        });
+
+        socket.on('disconnect', () => {
+            status.textContent = 'Disconnected from server';
+            status.style.color = 'red';
+        });
+
+        socket.on('new_message', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = `${data.sender}: ${data.text}`;
+            messages.appendChild(messageDiv);
+        });
+
+        socket.on('user_joined', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = `System: ${data.message}`;
+            messageDiv.style.color = 'blue';
+            messages.appendChild(messageDiv);
+        });
+
+        socket.on('room_info', (data) => {
+            console.log('Room info:', data);
+        });
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                socket.emit('send_message', {
+                    text: text,
+                    sender: 'test',
+                    timestamp: Date.now()
+                });
+                messageInput.value = '';
+            }
+        }
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

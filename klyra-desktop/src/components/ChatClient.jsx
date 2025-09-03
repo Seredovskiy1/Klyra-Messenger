@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import "./ChatClient.css";
 import klyraLogo from "../assets/klyra-logo.svg";
 import SettingsMenu from "./SettingsMenu";
+import { io } from "socket.io-client";
+import { loadConfig, getConfig, getWebSocketUrl } from "../utils/config";
 
 function ChatClient({ userInfo, onLogout }) {
   const [message, setMessage] = useState("");
@@ -12,8 +14,9 @@ function ChatClient({ userInfo, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const [maxReconnectAttempts] = useState(5);
+  const [maxReconnectAttempts, setMaxReconnectAttempts] = useState(5);
   const [reconnectInterval, setReconnectInterval] = useState(1000);
+  const [config, setConfig] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [users, setUsers] = useState([]);
@@ -22,55 +25,12 @@ function ChatClient({ userInfo, onLogout }) {
   const [contextMenu, setContextMenu] = useState(null);
 
   const [messages, setMessages] = useState([]);
-  const messageTimeouts = useRef(new Map()); // Store timeouts for message deletion
-  const [encryptionKey, setEncryptionKey] = useState(null); // Store encryption key
 
-  const wsRef = useRef(null);
+  const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
-  // Function to schedule message deletion after 1 hour
-  const scheduleMessageDeletion = (messageId) => {
-    const timeoutId = setTimeout(() => {
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      messageTimeouts.current.delete(messageId);
-    }, 60 * 60 * 1000); // 1 hour in milliseconds
-    
-    messageTimeouts.current.set(messageId, timeoutId);
-  };
 
-  // Simple encryption/decryption functions (XOR cipher for demonstration)
-  const generateEncryptionKey = () => {
-    const key = new Uint8Array(32);
-    crypto.getRandomValues(key);
-    return key;
-  };
-
-  const encryptMessage = (text, key) => {
-    const textBytes = new TextEncoder().encode(text);
-    const encrypted = new Uint8Array(textBytes.length);
-    
-    for (let i = 0; i < textBytes.length; i++) {
-      encrypted[i] = textBytes[i] ^ key[i % key.length];
-    }
-    
-    return btoa(String.fromCharCode(...encrypted));
-  };
-
-  const decryptMessage = (encryptedText, key) => {
-    try {
-      const encrypted = new Uint8Array(atob(encryptedText).split('').map(c => c.charCodeAt(0)));
-      const decrypted = new Uint8Array(encrypted.length);
-      
-      for (let i = 0; i < encrypted.length; i++) {
-        decrypted[i] = encrypted[i] ^ key[i % key.length];
-      }
-      
-      return new TextDecoder().decode(decrypted);
-    } catch (error) {
-      return encryptedText; // Return original if decryption fails
-    }
-  };
 
   // Auto-reconnect function
   const attemptReconnect = () => {
@@ -86,107 +46,112 @@ function ChatClient({ userInfo, onLogout }) {
     const delay = Math.min(reconnectInterval * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff, max 30s
     
     reconnectTimeoutRef.current = setTimeout(() => {
-      // Attempting to reconnect (no logging for anonymity)
-      connectWebSocket();
+      // Attempting to reconnect
+      connectSocket();
     }, delay);
   };
 
-  // WebSocket connection functions
-  const connectWebSocket = () => {
-    if (!userInfo?.serverAddress) return;
-    
-    // Don't create new connection if already connected or connecting
-    if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
-      // WebSocket already connected or connecting (no logging for anonymity)
+  // Socket.io connection functions
+  const connectSocket = () => {
+    // Don't create new connection if already connected
+    if (socketRef.current && socketRef.current.connected) {
       return;
     }
     
-    const protocol = userInfo.isServerOwner ? 'ws' : 'ws';
-    const address = userInfo.isServerOwner ? `localhost:${userInfo.serverPort}` : userInfo.serverAddress;
-    const wsUrl = `${protocol}://${address}`;
-    
-    // Creating new WebSocket connection (no logging for anonymity)
-    
-    try {
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-      
-      ws.onopen = () => {
-        // WebSocket connected (no logging for anonymity)
-        setIsConnected(true);
-        setConnectionStatus("connected");
-        setReconnectAttempts(0); // Reset reconnect attempts on successful connection
-        
-        // Generate encryption key for this session
-        const key = generateEncryptionKey();
-        setEncryptionKey(key);
-        
-        // Send user info to server
-        const userInfoMessage = {
-          type: 'user_join',
-          user: {
-            id: userInfo.id,
-            name: userInfo.name,
-            nickname: userInfo.nickname,
-            avatar: userInfo.avatar,
-            isServerOwner: userInfo.isServerOwner
-          }
-        };
-        ws.send(JSON.stringify(userInfoMessage));
-      };
-      
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleWebSocketMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-      
-      ws.onclose = () => {
-        // WebSocket disconnected (no logging for anonymity)
-        setIsConnected(false);
-        setConnectionStatus("disconnected");
-        
-        // Attempt to reconnect
-        attemptReconnect();
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionStatus("error");
-      };
-      
-    } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
-      setConnectionStatus("error");
+    if (!config) {
+      console.error('Configuration not loaded yet');
+      return;
     }
+    
+    // Connect to the external server
+    const serverUrl = getWebSocketUrl();
+    const socket = io(serverUrl);
+    socketRef.current = socket;
+    
+    socket.on('connect', () => {
+      // Socket connected
+      setIsConnected(true);
+      setConnectionStatus("connected");
+      setReconnectAttempts(0); // Reset reconnect attempts on successful connection
+      
+      // Send user info to server
+      socket.emit('user_join', {
+        name: userInfo.name,
+        nickname: userInfo.nickname,
+        avatar: userInfo.avatar,
+        room: 'general'
+      });
+    });
+    
+    socket.on('disconnect', () => {
+      // Socket disconnected
+      setIsConnected(false);
+      setConnectionStatus("disconnected");
+      
+      // Attempt to reconnect
+      attemptReconnect();
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setConnectionStatus("error");
+    });
+    
+    // Handle all incoming events
+    socket.on('new_message', (data) => handleSocketMessage('new_message', data));
+    socket.on('user_joined', (data) => handleSocketMessage('user_joined', data));
+    socket.on('user_left', (data) => handleSocketMessage('user_left', data));
+    socket.on('room_info', (data) => handleSocketMessage('room_info', data));
+    socket.on('message_edited', (data) => handleSocketMessage('message_edited', data));
+    socket.on('message_deleted', (data) => handleSocketMessage('message_deleted', data));
   };
 
-  const handleWebSocketMessage = (data) => {
-    switch (data.type) {
-      case 'message':
-        // Only add messages from other users (not our own)
-        if (data.sender !== userInfo.nickname) {
-          // Decrypt message if it's encrypted
-          const messageText = (data.encrypted && encryptionKey) ? 
-            decryptMessage(data.text, encryptionKey) : data.text;
-          
-          const newMessage = {
-            id: Date.now() + Math.random(),
-            text: messageText,
+  const handleSocketMessage = (type, data) => {
+    switch (type) {
+
+
+      case 'new_message':
+        // Handle file messages
+        if (data.type === 'file' && data.sender !== userInfo.nickname) {
+          const fileMessage = {
+            id: data.id || Date.now() + Math.random(),
+            text: `📎 ${data.fileName}`,
             sender: 'other',
             time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             avatar: data.sender.charAt(0).toUpperCase(),
-            timestamp: Date.now(),
+            timestamp: data.timestamp || Date.now(),
+            senderName: data.sender,
+            isNew: true,
+            isFile: true,
+            fileName: data.fileName,
+            fileSize: data.fileSize || 'Unknown',
+            fileType: data.fileType || 'application/octet-stream',
+            fileData: data.fileData
+          };
+          setMessages(prev => [...prev, fileMessage]);
+          
+          // Play notification sound for files from other users
+          playNotificationSound();
+          
+          // Remove new message highlight after animation
+          setTimeout(() => {
+            setMessages(prev => prev.map(msg => 
+              msg.id === fileMessage.id ? { ...msg, isNew: false } : msg
+            ));
+          }, 600);
+        } else if (data.sender !== userInfo.nickname) {
+          // Handle text messages
+          const newMessage = {
+            id: data.id || Date.now() + Math.random(),
+            text: data.text,
+            sender: 'other',
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            avatar: data.sender.charAt(0).toUpperCase(),
+            timestamp: data.timestamp || Date.now(),
             senderName: data.sender,
             isNew: true
           };
           setMessages(prev => [...prev, newMessage]);
-          
-          // Schedule automatic deletion after 1 hour
-          scheduleMessageDeletion(newMessage.id);
           
           // Play notification sound for messages from other users
           playNotificationSound();
@@ -199,48 +164,10 @@ function ChatClient({ userInfo, onLogout }) {
           }, 600);
         }
         break;
-
-      case 'file':
-        // Only add files from other users (not our own)
-        if (data.sender !== userInfo.nickname) {
-          // Generate anonymous filename
-          const anonymousFileName = `file_${Date.now()}.bin`;
-          
-          const fileMessage = {
-            id: Date.now() + Math.random(),
-            text: `📎 ${anonymousFileName}`,
-            sender: 'other',
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            avatar: data.sender.charAt(0).toUpperCase(),
-            timestamp: Date.now(),
-            senderName: data.sender,
-            isNew: true,
-            isFile: true,
-            fileName: anonymousFileName,
-            fileSize: 'Unknown',
-            fileType: 'application/octet-stream',
-            fileData: data.fileData
-          };
-          setMessages(prev => [...prev, fileMessage]);
-          
-          // Schedule automatic deletion after 1 hour
-          scheduleMessageDeletion(fileMessage.id);
-          
-          // Play notification sound for files from other users
-          playNotificationSound();
-          
-          // Remove new message highlight after animation
-          setTimeout(() => {
-            setMessages(prev => prev.map(msg => 
-              msg.id === fileMessage.id ? { ...msg, isNew: false } : msg
-            ));
-          }, 600);
-        }
-        break;
         
-      case 'user_join':
-        // Add user to list or update status
-        if (data.user) {
+      case 'user_joined':
+        // Add user to list or update status (but not current user)
+        if (data.user && data.user.id !== userInfo.id) {
           setUsers(prev => {
             const existingUser = prev.find(u => u.id === data.user.id);
             if (existingUser) {
@@ -250,10 +177,10 @@ function ChatClient({ userInfo, onLogout }) {
             }
           });
         }
-        if (data.text) {
+        if (data.message) {
           const systemMessage = {
             id: Date.now() + Math.random(),
-            text: data.text,
+            text: data.message,
             sender: 'system',
             time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             avatar: 'S',
@@ -271,15 +198,15 @@ function ChatClient({ userInfo, onLogout }) {
         }
         break;
         
-      case 'user_leave':
-        // Remove user from list or update status
-        if (data.user) {
+      case 'user_left':
+        // Remove user from list or update status (but not current user)
+        if (data.user && data.user.id !== userInfo.id) {
           setUsers(prev => prev.filter(u => u.id !== data.user.id));
         }
-        if (data.text) {
+        if (data.message) {
           const systemMessage = {
             id: Date.now() + Math.random(),
-            text: data.text,
+            text: data.message,
             sender: 'system',
             time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             avatar: 'S',
@@ -298,7 +225,7 @@ function ChatClient({ userInfo, onLogout }) {
         break;
         
       case 'system':
-        // Received system message (no logging for anonymity)
+        // Received system message
         const systemMessage = {
           id: Date.now() + Math.random(),
           text: data.text,
@@ -310,8 +237,7 @@ function ChatClient({ userInfo, onLogout }) {
         };
         setMessages(prev => [...prev, systemMessage]);
         
-        // Schedule automatic deletion after 1 hour
-        scheduleMessageDeletion(systemMessage.id);
+
         
         // Remove new message highlight after animation
         setTimeout(() => {
@@ -321,16 +247,29 @@ function ChatClient({ userInfo, onLogout }) {
         }, 600);
         break;
 
+      case 'room_info':
+        // Handle room information from server
+        if (data.users) {
+          // Filter out current user to avoid duplicates
+          const otherUsers = data.users.filter(user => user.id !== userInfo.id);
+          setUsers(otherUsers);
+        }
+        if (data.messages) {
+          setMessages(data.messages.map(msg => ({
+            ...msg,
+            time: new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            avatar: msg.sender.charAt(0).toUpperCase(),
+            isNew: false
+          })));
+        }
+        break;
+
       case 'message_edited':
         // Update edited message
         if (data.messageId && data.newText) {
-          // Decrypt edited text if it's encrypted
-          const editedText = (data.encrypted && encryptionKey) ? 
-            decryptMessage(data.newText, encryptionKey) : data.newText;
-          
           setMessages(prev => prev.map(msg => 
             msg.id === data.messageId 
-              ? { ...msg, text: editedText, isEdited: true }
+              ? { ...msg, text: data.newText, isEdited: true }
               : msg
           ));
         }
@@ -346,31 +285,20 @@ function ChatClient({ userInfo, onLogout }) {
 
         
       default:
-        // Unknown message type (no logging for anonymity)
+        // Unknown message type
     }
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (message.trim() && wsRef.current?.readyState === WebSocket.OPEN) {
-      // Add random delay to prevent traffic analysis (50-200ms)
-      const randomDelay = Math.random() * 150 + 50;
+    if (message.trim() && socketRef.current?.connected) {
+      const messageData = {
+        text: message.trim(),
+        sender: userInfo.nickname,
+        timestamp: Date.now()
+      };
       
-      setTimeout(() => {
-        // Encrypt message before sending
-        const encryptedText = encryptionKey ? encryptMessage(message.trim(), encryptionKey) : message.trim();
-        
-        const messageData = {
-          type: 'message',
-          text: encryptedText,
-          sender: userInfo.nickname,
-          timestamp: Date.now(),
-          encrypted: !!encryptionKey
-        };
-        
-        wsRef.current.send(JSON.stringify(messageData));
-      }, randomDelay);
-      
+      socketRef.current.emit('send_message', messageData);
       setMessage("");
       
       // Add message to local state immediately to avoid duplication
@@ -385,9 +313,6 @@ function ChatClient({ userInfo, onLogout }) {
         isNew: true
       };
       setMessages(prev => [...prev, localMessage]);
-      
-      // Schedule automatic deletion after 1 hour
-      scheduleMessageDeletion(localMessage.id);
       
       // Remove new message highlight after animation
       setTimeout(() => {
@@ -407,26 +332,35 @@ function ChatClient({ userInfo, onLogout }) {
     scrollToBottom();
   }, [messages]);
 
-  // Connect to WebSocket when component mounts
+  // Load configuration and connect when component mounts
   useEffect(() => {
-    // useEffect triggered (no logging for anonymity)
-    if (userInfo) {
-      connectWebSocket();
+    const initializeConfig = async () => {
+      const loadedConfig = await loadConfig();
+      setConfig(loadedConfig);
+      setMaxReconnectAttempts(loadedConfig.server.reconnectAttempts);
+      setReconnectInterval(loadedConfig.server.reconnectInterval);
+      setSoundEnabled(loadedConfig.ui.soundEnabled);
+    };
+    
+    initializeConfig();
+  }, []);
+
+  // Connect to WebSocket when component mounts and config is loaded
+  useEffect(() => {
+    if (userInfo && config) {
+      connectSocket();
     }
     
     return () => {
-      // useEffect cleanup - closing WebSocket (no logging for anonymity)
-      if (wsRef.current) {
-        wsRef.current.close();
+      // useEffect cleanup - closing socket
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      // Clear all message deletion timeouts
-      messageTimeouts.current.forEach(timeoutId => clearTimeout(timeoutId));
-      messageTimeouts.current.clear();
     };
-  }, [userInfo]);
+  }, [userInfo, config]);
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -495,11 +429,10 @@ function ChatClient({ userInfo, onLogout }) {
       audio.volume = 0.2; // 20% volume
       audio.play().catch(() => {
         // If custom sound fails, fall back to generated sound
-        // Custom sound not found, using generated sound (no logging for anonymity)
         playGeneratedSound();
       });
     } catch (error) {
-      // Could not play custom sound, using generated sound (no logging for anonymity)
+      // Could not play custom sound, using generated sound
       playGeneratedSound();
     }
   };
@@ -525,7 +458,7 @@ function ChatClient({ userInfo, onLogout }) {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
     } catch (error) {
-      // Could not play generated sound (no logging for anonymity)
+      // Could not play generated sound
     }
   };
 
@@ -547,7 +480,7 @@ function ChatClient({ userInfo, onLogout }) {
   };
 
   const sendFile = async () => {
-    if (!selectedFile || !wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (!selectedFile || !socketRef.current?.connected) return;
 
     setIsUploading(true);
     
@@ -557,27 +490,23 @@ function ChatClient({ userInfo, onLogout }) {
       reader.onload = () => {
         const base64Data = reader.result.split(',')[1];
         
-        // Add random delay to prevent traffic analysis (100-300ms for files)
-        const randomDelay = Math.random() * 200 + 100;
+        const fileMessage = {
+          fileData: base64Data,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type,
+          sender: userInfo.nickname,
+          timestamp: Date.now()
+        };
         
-        setTimeout(() => {
-          const fileMessage = {
-            type: 'file',
-            fileData: base64Data,
-            sender: userInfo.nickname,
-            timestamp: Date.now()
-          };
-          
-          wsRef.current.send(JSON.stringify(fileMessage));
-        }, randomDelay);
+        socketRef.current.emit('send_file', fileMessage);
         setSelectedFile(null);
         setIsUploading(false);
         
-        // Add file to local state immediately to avoid duplication (anonymous filename)
-        const anonymousFileName = `file_${Date.now()}.bin`;
+        // Add file to local state immediately to avoid duplication
         const localFileMessage = {
           id: Date.now() + Math.random(),
-          text: `📎 ${anonymousFileName}`,
+          text: `📎 ${selectedFile.name}`,
           sender: 'user',
           time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           avatar: userInfo.avatar,
@@ -585,15 +514,12 @@ function ChatClient({ userInfo, onLogout }) {
           senderName: userInfo.nickname,
           isNew: true,
           isFile: true,
-          fileName: anonymousFileName,
-          fileSize: 'Unknown',
-          fileType: 'application/octet-stream',
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type,
           fileData: base64Data
         };
         setMessages(prev => [...prev, localFileMessage]);
-        
-        // Schedule automatic deletion after 1 hour
-        scheduleMessageDeletion(localFileMessage.id);
         
         // Remove new message highlight after animation
         setTimeout(() => {
@@ -633,24 +559,15 @@ function ChatClient({ userInfo, onLogout }) {
   const saveEdit = () => {
     if (!editingMessage || !editText.trim()) return;
 
-    // Send edit message to server with random delay
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const randomDelay = Math.random() * 100 + 50; // 50-150ms
-      
-      setTimeout(() => {
-        // Encrypt edited text before sending
-        const encryptedText = encryptionKey ? encryptMessage(editText.trim(), encryptionKey) : editText.trim();
-        
-        const editMessage = {
-          type: 'edit_message',
-          messageId: editingMessage.id,
-          newText: encryptedText,
-          sender: userInfo.nickname,
-          timestamp: Date.now(),
-          encrypted: !!encryptionKey
-        };
-        wsRef.current.send(JSON.stringify(editMessage));
-      }, randomDelay);
+    // Send edit message to server
+    if (socketRef.current?.connected) {
+      const editMessage = {
+        messageId: editingMessage.id,
+        newText: editText.trim(),
+        sender: userInfo.nickname,
+        timestamp: Date.now()
+      };
+      socketRef.current.emit('edit_message', editMessage);
     }
 
     // Update local state immediately
@@ -665,19 +582,14 @@ function ChatClient({ userInfo, onLogout }) {
 
   const deleteMessage = (message) => {
     if (message.sender === 'user') {
-      // Send delete message to server with random delay
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        const randomDelay = Math.random() * 100 + 50; // 50-150ms
-        
-        setTimeout(() => {
-          const deleteMessage = {
-            type: 'delete_message',
-            messageId: message.id,
-            sender: userInfo.nickname,
-            timestamp: Date.now()
-          };
-          wsRef.current.send(JSON.stringify(deleteMessage));
-        }, randomDelay);
+      // Send delete message to server
+      if (socketRef.current?.connected) {
+        const deleteMessage = {
+          messageId: message.id,
+          sender: userInfo.nickname,
+          timestamp: Date.now()
+        };
+        socketRef.current.emit('delete_message', deleteMessage);
       }
 
       // Update local state immediately
@@ -795,27 +707,8 @@ function ChatClient({ userInfo, onLogout }) {
             </svg>
             <span>Online Users</span>
           </div>
-          {/* Server Administrator */}
-          {userInfo?.isServerOwner && (
-          <div className="user-item admin-user">
-            <div className="user-avatar">
-              <div className="user-avatar-circle admin-avatar">
-                  <span>{userInfo.avatar}</span>
-              </div>
-                <div className="status-indicator" style={{ backgroundColor: isConnected ? '#28a745' : '#dc3545' }}></div>
-            </div>
-            <div className="user-info">
-              <div className="user-name">
-                  {userInfo.name}
-                <span className="admin-tag">ADMIN</span>
-                </div>
-                <div className="user-status">{isConnected ? 'Online' : 'Offline'}</div>
-              </div>
-            </div>
-          )}
-          
-          {/* Current user (only if not server owner) */}
-          {userInfo && !userInfo.isServerOwner && (
+          {/* Current user */}
+          {userInfo && (
             <div className="user-item current-user">
               <div className="user-avatar">
                 <div className="user-avatar-circle" style={{ background: getAvatarColor(0) }}>
@@ -862,14 +755,10 @@ function ChatClient({ userInfo, onLogout }) {
             </div>
             <div className="chat-header-details">
               <span className="chat-header-name">
-                {userInfo?.isServerOwner ? userInfo.serverName : "General Chat"}
-                {userInfo?.isServerOwner && <span className="server-owner-badge">SERVER</span>}
+                General Chat
               </span>
               <span className="chat-header-status">
-                {userInfo?.isServerOwner 
-                  ? `Server running on port ${userInfo.serverPort} • ${users.length + 1} users online`
-                  : `${users.length + (userInfo?.isServerOwner ? 0 : 1)} users online`
-                }
+                {users.length + 1} users online
               </span>
             </div>
           </div>
@@ -907,7 +796,7 @@ function ChatClient({ userInfo, onLogout }) {
                 title="Reconnect"
                 onClick={() => {
                   setReconnectAttempts(0);
-                  connectWebSocket();
+                  connectSocket();
                 }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1023,7 +912,7 @@ function ChatClient({ userInfo, onLogout }) {
                             </div>
                             <div className="file-details">
                               <div className="file-name">{msg.fileName}</div>
-                              <div className="file-size">Unknown size</div>
+                              <div className="file-size">{msg.fileSize}</div>
                             </div>
                           </div>
                           <button 

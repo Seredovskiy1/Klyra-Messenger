@@ -1,0 +1,29 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 3001,
+    "protocol": "http",
+    "autoReconnect": true,
+    "reconnectAttempts": 5,
+    "reconnectInterval": 1000
+  },
+  "ui": {
+    "theme": "auto",
+    "soundEnabled": true,
+    "soundVolume": 0.2,
+    "showTimestamps": true,
+    "showAvatars": true
+  },
+  "features": {
+    "fileSharing": true,
+    "messageEditing": true,
+    "messageDeletion": true,
+    "typingIndicators": true,
+    "messageSearch": true
+  },
+  "limits": {
+    "maxFileSize": 10485760,
+    "maxMessageLength": 1000,
+    "maxMessagesInHistory": 100
+  }
+}
